@@ -20,7 +20,7 @@ def expand_dim_by_1dconv(inputs, out_channels, is_training):
   # expand one extra dimension, inputs.shape=[batches, max_steps, 1, N_orders]
   inputs = tf.expand_dims(inputs, axis=2)
   with tf.name_scope("expand"):
-    expand_1_conv = tf.layers.conv2d(inputs, out_channels, kernel_size=3, padding='same', use_bias=False, kernel_initializer=tf.contrib.layers.xavier_initializer())
+    expand_1_conv = tf.layers.conv2d(inputs, int(out_channels/2), kernel_size=3, padding='same', use_bias=False, kernel_initializer=tf.contrib.layers.xavier_initializer())
     expand_1_bn = tf.layers.batch_normalization(expand_1_conv, training=is_training)
     expand_1_relu = tf.nn.relu(expand_1_bn)
 
@@ -93,6 +93,7 @@ def bigblock_1d(inputs, num_resblock, kernel_size, out_channels, is_training, ke
   param is_training : bool or tf.bool, weather in training phase
   param keep_prob : keep probability when drop out
   """
+  
   shape = inputs.get_shape().as_list()
 
   inputs_initial = tf.identity(inputs)
@@ -104,19 +105,18 @@ def bigblock_1d(inputs, num_resblock, kernel_size, out_channels, is_training, ke
     outputs = inputs_initial + inputs
   else:
     # projection
-    outputs = tf.layers.conv2d(inputs_initial, out_channels, 1, kernel_initializer=tf.contrib.layers.xavier_initializer(), use_bias=False)
+    outputs = tf.layers.conv2d(inputs_initial, out_channels, 1, kernel_initializer=tf.contrib.layers.xavier_initializer(), use_bias=False) + inputs
   # no dropout after bigblock
   return outputs
 
 
-def resnet(inputs, stepsizes, is_training, NUM_LABELS):
+def resnet(inputs, is_training, NUM_LABELS):
   """
   features is extracted by python_speech_features, so the features.shape=[max_steps, N_orders]
   inputs.shape=[batches, max_steps, N_orders]
   so the inputs is a 3D placehoder, which shape=[batches, max_steps, N_orders]
   params:
     inputs : 3D tensor(placeholder), inputs.shape=[batches, max_steps, N_orders]
-    stepsizes : valid stepsize of each training instance
     is_training : bool or tf.bool, indicate weather in training phase
     NUM_LABELS : int, number of labels in lexical
   """

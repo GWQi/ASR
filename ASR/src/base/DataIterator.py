@@ -38,7 +38,7 @@ class DataIterator(object):
     # batch counter
     self.ith_batch = 0
     # batch size
-    self.batch_size = 64
+    self.batch_size = 32
     # epoch counter
     self.kth_epoch = 1
     # total number of epoch

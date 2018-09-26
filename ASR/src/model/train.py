@@ -18,20 +18,24 @@ sys.path.append(ASR_PROJECT_ROOT)
 from ASR.src.base import fparam
 from ASR.src.base.AishellIterator import AishellIterator
 from ASR.src.base.JDDIterator import JDDIterator
+from ASR.src.base.THCHSIterator import THCHSIterator
+
 from deep_residual_dilated_GoogleNet_hybrid import DRDG_1dconv
 from resnet import resnet
+from thefuck import thefuck
+from CRNN import CRNN
 
 
 def create_flags():
   tf.app.flags.DEFINE_float  ("grad_clip",         -1.0,                 "gradient clip value")
   tf.app.flags.DEFINE_string ("MODEL_ROOT",       "../../model/jdd",        "directory where to save checkpoint")
   tf.app.flags.DEFINE_string ("CKPT_PREFIX",      "../../model/ckpt",   "tensorflow checkpoint prefix")
-  tf.app.flags.DEFINE_string ("DATA_ROOT",        "/home/guwenqi/Documents/jdd_mandarin/feature",                   "data root directory path")
-  tf.app.flags.DEFINE_string ("TRANSCRIPTS_PATH", "/home/guwenqi/Documents/jdd_mandarin/label.txt",                   "transcripts file path")
+  tf.app.flags.DEFINE_string ("DATA_ROOT",        "/home/guwenqi/fengxindata/data_thchs30/feature",                   "data root directory path")
+  tf.app.flags.DEFINE_string ("TRANSCRIPTS_PATH", "/home/guwenqi/fengxindata/data_thchs30/scp/word.scp",                   "transcripts file path")
   tf.app.flags.DEFINE_string ("logfile",          "./log.txt",          "log file path")
-  # tf.app.flags.DEFINE_integer("NUM_LABELS",       4333,                    "number of words in lexical")
-  tf.app.flags.DEFINE_integer("NUM_LABELS",       2026,                    "number of words in lexical")
-
+  # tf.app.flags.DEFINE_integer("NUM_LABELS",       4333,                    "number of words in Aishell lexical")
+  # tf.app.flags.DEFINE_integer("NUM_LABELS",       2026,                    "number of words in JDD mandarin lexical")
+  tf.app.flags.DEFINE_integer("NUM_LABELS",       2883,                    "number of words in JDD mandarin lexical")
 
 def train():
   # flags initialization
@@ -39,9 +43,9 @@ def train():
   FLAGS = tf.app.flags.FLAGS
 
   # iterator initialization
-  dataiter = JDDIterator()
+  dataiter = THCHSIterator()
   try:
-    dataiter.load(os.path.join(FLAGS.MODEL_ROOT, "JDDIterator.ckpt"))
+    dataiter.load(os.path.join(FLAGS.MODEL_ROOT, "THCHSIterator.ckpt"))
     dataiter.set_rootpath(FLAGS.DATA_ROOT)
   except:
     dataiter.configure(FLAGS.DATA_ROOT, FLAGS.TRANSCRIPTS_PATH)
@@ -63,7 +67,7 @@ def train():
   is_training = tf.placeholder(tf.bool)
 
   # logits.shape=[batches, max_timestep, NUM_LABELS+1]
-  logits = resnet(inputs, stepsizes, is_training, FLAGS.NUM_LABELS+1)
+  logits = CRNN(inputs, is_training, FLAGS.NUM_LABELS+1)
   # transpose logits to time-major format
   logits = tf.transpose(logits, [1, 0, 2])
   # ctc loss

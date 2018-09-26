@@ -10,8 +10,8 @@ sys.path.append(ASR_ROOT)
 from ASR.src.util.audio import extractMFCC
 from ASR.src.base import fparam
 
-wav_dir = ''
-feature_dir = ''
+wav_dir = '/home/guwenqi/fengxindata/data_thchs30/data'
+feature_dir = '/home/guwenqi/fengxindata/data_thchs30/feature'
 
 i = 0
 for root, dirlist, filelist in os.walk(wav_dir):
