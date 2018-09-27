@@ -19,6 +19,7 @@ from ASR.src.base import fparam
 from ASR.src.base.AishellIterator import AishellIterator
 from ASR.src.base.JDDIterator import JDDIterator
 from ASR.src.base.THCHSIterator import THCHSIterator
+from ASR.src.base.JDDDigitIterator import JDDDigitIterator
 
 from deep_residual_dilated_GoogleNet_hybrid import DRDG_1dconv
 from resnet import resnet
@@ -30,12 +31,13 @@ def create_flags():
   tf.app.flags.DEFINE_float  ("grad_clip",         -1.0,                 "gradient clip value")
   tf.app.flags.DEFINE_string ("MODEL_ROOT",       "../../model/jdd",        "directory where to save checkpoint")
   tf.app.flags.DEFINE_string ("CKPT_PREFIX",      "../../model/ckpt",   "tensorflow checkpoint prefix")
-  tf.app.flags.DEFINE_string ("DATA_ROOT",        "/home/guwenqi/fengxindata/data_thchs30/feature",                   "data root directory path")
-  tf.app.flags.DEFINE_string ("TRANSCRIPTS_PATH", "/home/guwenqi/fengxindata/data_thchs30/scp/word.scp",                   "transcripts file path")
+  tf.app.flags.DEFINE_string ("DATA_ROOT",        "/home/guwenqi/Documents/jdd_new/data/feature/mfcc_no_norm",                   "data root directory path")
+  tf.app.flags.DEFINE_string ("TRANSCRIPTS_PATH", "/home/guwenqi/Documents/jdd_new/data/label.txt",                   "transcripts file path")
   tf.app.flags.DEFINE_string ("logfile",          "./log.txt",          "log file path")
   # tf.app.flags.DEFINE_integer("NUM_LABELS",       4333,                    "number of words in Aishell lexical")
   # tf.app.flags.DEFINE_integer("NUM_LABELS",       2026,                    "number of words in JDD mandarin lexical")
-  tf.app.flags.DEFINE_integer("NUM_LABELS",       2883,                    "number of words in JDD mandarin lexical")
+  # tf.app.flags.DEFINE_integer("NUM_LABELS",       2883,                    "number of words in JDD mandarin lexical")
+  tf.app.flags.DEFINE_integer("NUM_LABELS",         12,                    "number of words in JDD digit lexical")
 
 def train():
   # flags initialization
@@ -43,9 +45,9 @@ def train():
   FLAGS = tf.app.flags.FLAGS
 
   # iterator initialization
-  dataiter = THCHSIterator()
+  dataiter = JDDDigitIterator()
   try:
-    dataiter.load(os.path.join(FLAGS.MODEL_ROOT, "THCHSIterator.ckpt"))
+    dataiter.load(os.path.join(FLAGS.MODEL_ROOT, "JDDDigitIterator.ckpt"))
     dataiter.set_rootpath(FLAGS.DATA_ROOT)
   except:
     dataiter.configure(FLAGS.DATA_ROOT, FLAGS.TRANSCRIPTS_PATH)

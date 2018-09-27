@@ -106,21 +106,21 @@ def CRNN(inputs, is_training, NUM_LABELS):
   with tf.name_scope("bigblock/1"):
     bigblock_1_outputs = bigblock_1d(inputs_relu, num_block=5, kernel_size=3, reduce_dim=64, out_channels=128, is_training=is_training, keep_prob=0.8)
 
-  # bigblock 2
-  with tf.name_scope("bigblock/2"):
-    bigblock_2_outputs = bigblock_1d(bigblock_1_outputs, num_block=5, kernel_size=3, reduce_dim=64, out_channels=128, is_training=is_training, keep_prob=0.8)
+  # # bigblock 2
+  # with tf.name_scope("bigblock/2"):
+  #   bigblock_2_outputs = bigblock_1d(bigblock_1_outputs, num_block=5, kernel_size=3, reduce_dim=64, out_channels=128, is_training=is_training, keep_prob=0.8)
 
-  # bigblock 3
-  with tf.name_scope("bigblock/3"):
-    bigblock_3_outputs = bigblock_1d(bigblock_2_outputs, num_block=5, kernel_size=3, reduce_dim=64, out_channels=128, is_training=is_training, keep_prob=0.8)
+  # # bigblock 3
+  # with tf.name_scope("bigblock/3"):
+  #   bigblock_3_outputs = bigblock_1d(bigblock_2_outputs, num_block=5, kernel_size=3, reduce_dim=64, out_channels=128, is_training=is_training, keep_prob=0.8)
 
-  # bigblock 4
-  with tf.name_scope("bigblock/4"):
-    bigblock_4_outputs = bigblock_1d(bigblock_3_outputs, num_block=5, kernel_size=3, reduce_dim=64, out_channels=128, is_training=is_training, keep_prob=0.8)
+  # # bigblock 4
+  # with tf.name_scope("bigblock/4"):
+  #   bigblock_4_outputs = bigblock_1d(bigblock_3_outputs, num_block=5, kernel_size=3, reduce_dim=64, out_channels=128, is_training=is_training, keep_prob=0.8)
 
   # FNN
   with tf.name_scope("logit"):
-    FNN = tf.layers.conv1d(bigblock_4_outputs, filters=1024, kernel_size=1, use_bias=False, kernel_initializer=tf.contrib.layers.xavier_initializer())
+    FNN = tf.layers.conv1d(bigblock_1_outputs, filters=128, kernel_size=1, use_bias=False, kernel_initializer=tf.contrib.layers.xavier_initializer())
     FNN_bn = tf.layers.batch_normalization(FNN, training=is_training)
     FNN_relu = tf.nn.relu(FNN_bn)
 
