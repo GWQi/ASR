@@ -1,2 +1,0 @@
-2018-09-28 03:14:56,961-root-INFO-Epoch:     1, Batch:   300, Validation LER: 0.920309, Model Saved!
-2018-09-28 03:37:13,196-root-INFO-Epoch:     1, Batch:   600, Validation LER: 0.896992, Model Saved!

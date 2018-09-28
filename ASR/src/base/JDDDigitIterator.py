@@ -17,7 +17,8 @@ from collections import Counter
 
 from ASR.src.base.DataIterator import DataIterator
 from ASR.src.util.utils import pad_sequence, dense2sparse
-
+from ASR.src.util.audio import extractMFCC
+from ASR.src.base import fparam
 
 
 class JDDDigitIterator(DataIterator):
@@ -69,7 +70,12 @@ class JDDDigitIterator(DataIterator):
     # fetch data and labels
     for index in self.train_indexes[(self.ith_batch-1)*self.batch_size : self.ith_batch*self.batch_size]:
       filepath, datalabels = self.train_list[index]
-      fea = np.load(os.path.join(self.data_root, filepath+'.npy'))
+      fea = extractMFCC(os.path.join(self.data_root, filepath+'.wav'),
+                        fparam.MFCC_ORDER, frame_length=fparam.MFCC_FRAME_LENGTH,
+                        frame_shift=fparam.MFCC_FRAME_SHIFT, n_stride=1,
+                        n_context=0, delta=True, double_delta=True)
+
+      # fea = np.load(os.path.join(self.data_root, filepath+'.npy'))
       # translate character labels into index labels
       dataindexes = [self.lexical.get(datalabel, 0) for datalabel in datalabels]
 
