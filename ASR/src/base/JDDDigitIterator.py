@@ -36,7 +36,7 @@ class JDDDigitIterator(DataIterator):
     # self.lexical_inverse = {index1 : 'character1', index2 : 'character2', ...}
     self.lexical_inverse = {}
 
-    self.batch_size = 30
+    self.batch_size = 32
     self.num_epoch = 100
 
   # @override
@@ -116,7 +116,7 @@ class JDDDigitIterator(DataIterator):
     # translate dense labels into sparse format to feed tf graph
     targets = dense2sparse(targets)
 
-    return data, stepsizes, targets
+    return data, targets, stepsizes
 
   # @override
   def configure(self, root, path):
@@ -138,6 +138,9 @@ class JDDDigitIterator(DataIterator):
 
         self.data_list.append([filename, labels])
 
+    for i in list(range(10)):
+      shuffle(self.data_list)
+
     # lexical and reverse lexical configuration
     words_counter = Counter(words)
     words_counter = sorted(words_counter.items(), key=lambda x: x[-1], reverse=True)
@@ -145,16 +148,18 @@ class JDDDigitIterator(DataIterator):
     self.lexical = dict(zip(lexical, list(range(0, len(lexical)))))
     self.lexical_inverse = dict(zip(self.lexical.values(), self.lexical.keys()))
 
+
     # data_list, train_list, val_list, val_list configuration
     val_size = int(len(self.data_list) * val_partion)
     # shuffle the original data list to generate train list and val/test list
+    shuffle(self.data_list)
     shuffle(self.data_list)
     self.train_list = self.data_list[0:-val_size]
     self.val_list = self.data_list[-val_size:]
     self.test_list = list(self.val_list)
 
     # generate train indexes
-    self.train_indexes = list(range(len(self.train_list)))
+    self.train_indexes = list(range(int(len(self.train_list) / 10)))
 
   # @override
   def save(self, ckpt_path):

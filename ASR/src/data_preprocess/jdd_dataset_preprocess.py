@@ -10,8 +10,8 @@ sys.path.append(ASR_ROOT)
 from ASR.src.util.audio import extractMFCC
 from ASR.src.base import fparam
 
-wav_dir = '/home/guwenqi/Documents/jdd_mandarin/jdd_train_dataset_mandarin'
-feature_dir = '/home/guwenqi/Documents/jdd_mandarin/feature'
+wav_dir = '/home/guwenqi/Documents/jdd_digits/wav'
+feature_dir = '/home/guwenqi/Documents/jdd_digits/feature'
 
 i = 0
 for root, dirlist, filelist in os.walk(wav_dir):

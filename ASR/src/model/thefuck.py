@@ -83,7 +83,7 @@ def thefuck(inputs, is_training, NUM_LABELS):
 
   skip = 0
   for _ in list(range(3)):
-    for r in [1, 2, 4, 8]:
+    for r in [1, 2, 4, 8, 16]:
       out, s = residual_block(out, size=7, rate=r)
       skip += s
  

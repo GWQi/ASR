@@ -50,12 +50,12 @@ def dense2sparse(labels):
   indices = []
   values = []
   for n, label in enumerate(labels):
-    for m, label_idx in enumerate(label):
-      if label_idx != 0:
-        indices.append((n, m))
-        values.append(label_idx)
-    # indices.extend(zip([n]*len(label), list(range(len(label)))))
-    # values.extend(label)
+    # for m, label_idx in enumerate(label):
+    #   if label_idx != 0:
+    #     indices.append((n, m))
+    #     values.append(label_idx)
+    indices.extend(zip([n]*len(label), list(range(len(label)))))
+    values.extend(label)
 
   indices = np.asarray(indices, dtype=np.int32)
   values = np.asarray(values, dtype=np.int32)

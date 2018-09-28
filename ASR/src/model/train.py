@@ -20,19 +20,20 @@ from ASR.src.base.AishellIterator import AishellIterator
 from ASR.src.base.JDDIterator import JDDIterator
 from ASR.src.base.THCHSIterator import THCHSIterator
 from ASR.src.base.JDDDigitIterator import JDDDigitIterator
+from ASR.src.optimizer.MaxPropOptimizer import MaxPropOptimizer
 
 from deep_residual_dilated_GoogleNet_hybrid import DRDG_1dconv
 from resnet import resnet
 from thefuck import thefuck
-from CRNN import CRNN
+from bottleNeck import bottleNeck
 
 
 def create_flags():
   tf.app.flags.DEFINE_float  ("grad_clip",         -1.0,                 "gradient clip value")
   tf.app.flags.DEFINE_string ("MODEL_ROOT",       "../../model/jdd",        "directory where to save checkpoint")
-  tf.app.flags.DEFINE_string ("CKPT_PREFIX",      "../../model/ckpt",   "tensorflow checkpoint prefix")
-  tf.app.flags.DEFINE_string ("DATA_ROOT",        "/home/guwenqi/Documents/jdd_new/data/feature/mfcc_no_norm",                   "data root directory path")
-  tf.app.flags.DEFINE_string ("TRANSCRIPTS_PATH", "/home/guwenqi/Documents/jdd_new/data/label.txt",                   "transcripts file path")
+  tf.app.flags.DEFINE_string ("CKPT_PREFIX",      "../../model/jdd/ckpt",   "tensorflow checkpoint prefix")
+  tf.app.flags.DEFINE_string ("DATA_ROOT",        "/home/guwenqi/Documents/jdd_digits/feature",                   "data root directory path")
+  tf.app.flags.DEFINE_string ("TRANSCRIPTS_PATH", "/home/guwenqi/Documents/jdd_digits/label.txt",                   "transcripts file path")
   tf.app.flags.DEFINE_string ("logfile",          "./log.txt",          "log file path")
   # tf.app.flags.DEFINE_integer("NUM_LABELS",       4333,                    "number of words in Aishell lexical")
   # tf.app.flags.DEFINE_integer("NUM_LABELS",       2026,                    "number of words in JDD mandarin lexical")
@@ -69,7 +70,7 @@ def train():
   is_training = tf.placeholder(tf.bool)
 
   # logits.shape=[batches, max_timestep, NUM_LABELS+1]
-  logits = CRNN(inputs, is_training, FLAGS.NUM_LABELS+1)
+  logits = bottleNeck(inputs, is_training, FLAGS.NUM_LABELS+1)
   # transpose logits to time-major format
   logits = tf.transpose(logits, [1, 0, 2])
   # ctc loss
@@ -81,7 +82,7 @@ def train():
 
   # create the optimizer, because the batch normalization moving average update
   # operation relies no-gradient updating, so we need update the mean and std manually
-  optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+  optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9, use_nesterov=True)
   update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
   with tf.control_dependencies(update_ops):
     if FLAGS.grad_clip < 0:
@@ -129,33 +130,36 @@ def train():
         break
 
       else:
-        loss_, ler_, _ = sess.run([loss, ler, train_op],
-                                  feed_dict={
-                                  inputs         : data,
-                                  targets        : targets_,
-                                  stepsizes      : stepsizes_,
-                                  learning_rate  : 0.001 * 0.96**dataiter.kth_epoch,
-                                  is_training    : True
-                                  })
-        print("Epoch: %-2d, Batch: %-5d, Loss: %-5f." %\
-              (dataiter.kth_epoch, dataiter.ith_batch, loss_))
+        try:
+          loss_, ler_, _ = sess.run([loss, ler, train_op],
+                                    feed_dict={
+                                    inputs         : data,
+                                    targets        : targets_,
+                                    stepsizes      : stepsizes_,
+                                    learning_rate  : 0.001 * 0.96**dataiter.kth_epoch,
+                                    is_training    : True
+                                    })
+        except:
+          continue
+        print("Epoch: %5d, Batch: %5d, Loss: %5f, Ler: %5f." %\
+              (dataiter.kth_epoch, dataiter.ith_batch, loss_, ler_))
         count += 1
         loss_all += loss_
         ler_all += ler_
 
-      if dataiter.ith_batch % 100 == 0:
-        # compute average loss and average accuracy every 100 batch
-        loss_ave = loss_all / count
-        ler_ave = ler_all / count
-        # reset loss_all, ler_all, count
-        loss_all = 0
-        ler_all = 0
-        count = 0
+        if dataiter.ith_batch % 100 == 0:
+          # compute average loss and average accuracy every 100 batch
+          loss_ave = loss_all / count
+          ler_ave = ler_all / count
+          # reset loss_all, ler_all, count
+          loss_all = 0
+          ler_all = 0
+          count = 0
 
-        print("Epoch: %-2d, Batch: %-5d, Ave Loss: %-5f, Ave LER: %-5f." %\
-              (dataiter.kth_epoch, dataiter.ith_batch, loss_ave, ler_ave))
+          print("Epoch: %5d, Batch: %5d, Ave Loss: %5f, Ave LER: %5f." %\
+                (dataiter.kth_epoch, dataiter.ith_batch, loss_ave, ler_ave))
 
-        if dataiter.ith_batch % 1000 == 0 or epoch_done:
+        if dataiter.ith_batch % 300 == 0 or epoch_done:
           # do validation every 1000 batch or epoch_done
           val_batch_num = int(len(dataiter.val_list) / dataiter.batch_size) + 1
           val_ler_all = 0
@@ -163,8 +167,8 @@ def train():
           for i in list(range(val_batch_num)):
             val_data, val_targets, val_stepsizes = dataiter.fetch_data(i*dataiter.batch_size,
                                                                        (i+1)*dataiter.batch_size,
-                                                                       dataset='val')
-            val_ler_ = sess.run([loss, ler],
+                                                                       dataname='val')
+            val_ler_ = sess.run(ler,
                                 feed_dict={
                                 inputs         : val_data,
                                 targets        : val_targets,
@@ -176,8 +180,10 @@ def train():
 
           # save model 
           saver.save(sess, FLAGS.CKPT_PREFIX+"-%d-%d" % (dataiter.kth_epoch, dataiter.ith_batch))
-          dataiter.save(os.path.join(FLAGS.MODEL_ROOT, ''))
-          logger.info("Epoch: %-2d, Batch: %-5d, Validation LER: %-5f, Model Saved!" %
+          dataiter.save(os.path.join(FLAGS.MODEL_ROOT, 'JDDDigitIterator.ckpt'))
+          print("Epoch: %5d, Batch: %5d, Validation LER: %5f, Model Saved!" %
+                (dataiter.kth_epoch, dataiter.ith_batch, val_ler_all/val_batch_num))
+          logger.info("Epoch: %5d, Batch: %5d, Validation LER: %5f, Model Saved!" %
                       (dataiter.kth_epoch, dataiter.ith_batch, val_ler_all/val_batch_num))
 
 

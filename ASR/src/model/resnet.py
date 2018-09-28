@@ -126,26 +126,26 @@ def resnet(inputs, is_training, NUM_LABELS):
 
   # bigblock 1
   with tf.name_scope("bigblock/1"):
-    bigblock_1_outputs = bigblock_1d(inputs=resnet_inputs, num_resblock=5, kernel_size=3,
+    bigblock_1_outputs = bigblock_1d(inputs=resnet_inputs, num_resblock=5, kernel_size=7,
                                      out_channels=64, is_training=is_training, keep_prob=0.8)
 
   # bigblock 2
   with tf.name_scope("bigblock/2"):
-    bigblock_2_outputs = bigblock_1d(inputs=bigblock_1_outputs, num_resblock=5, kernel_size=3,
+    bigblock_2_outputs = bigblock_1d(inputs=bigblock_1_outputs, num_resblock=5, kernel_size=7,
                                      out_channels=64, is_training=is_training, keep_prob=0.8)
 
   # bigblock 3
   with tf.name_scope("bigblock/3"):
-    bigblock_3_outputs = bigblock_1d(inputs=bigblock_2_outputs, num_resblock=5, kernel_size=3,
+    bigblock_3_outputs = bigblock_1d(inputs=bigblock_2_outputs, num_resblock=5, kernel_size=7,
                                      out_channels=128, is_training=is_training, keep_prob=0.8)
 
   # bigblock 4
   with tf.name_scope("bigblock/4"):
-    bigblock_4_outputs = bigblock_1d(inputs=bigblock_3_outputs, num_resblock=5, kernel_size=3,
+    bigblock_4_outputs = bigblock_1d(inputs=bigblock_3_outputs, num_resblock=5, kernel_size=7,
                                      out_channels=128, is_training=is_training, keep_prob=0.8)
   # bigblock 5
   with tf.name_scope("bigblock/5"):
-    bigblock_5_outputs = bigblock_1d(inputs=bigblock_4_outputs, num_resblock=5, kernel_size=3,
+    bigblock_5_outputs = bigblock_1d(inputs=bigblock_4_outputs, num_resblock=5, kernel_size=7,
                                      out_channels=256, is_training=is_training, keep_prob=0.8)
 
   with tf.name_scope("logits"):
